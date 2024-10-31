@@ -1,0 +1,32 @@
+﻿@model IEnumerable<Category>
+@{
+    ViewBag.PageTitle = "Home Page";
+    ViewBag.TitleCard = "Category List";
+    Layout = "~/Views/Shared/_DashBoard.cshtml";
+}
+
+<table class="table table-hover">
+   <thead>
+        <td>ID</td>
+        <td>Name</td>
+        <td>Description</td>
+        <td>Create Date</td>
+        <td>Edit   || Delete</td>
+        <td><a asp-action="Create" asp-controller="Category" class="btn btn-outline-success">Add New Category </a></td>
+   </thead>
+   <tbody>
+    @foreach(var item in Model)
+    {
+        <tr>
+        <td>@item.Id</td>
+        <td>@item.Name</td>
+        <td>@item.Description</td>
+        <td>@item.CreateDate</td>
+        <td>
+                    <a asp-action="Edit" asp-controller="Category" asp-route-IDCategory="@item.Id" class="btn btn-outline-warning">Edit</a> ||
+                   <a asp-action="Delete" asp-controller="Category" asp-route-id="@item.Id" class="btn btn-outline-danger" >Remove</a>
+        </td>
+        </tr>
+    }
+    </tbody>
+</table>

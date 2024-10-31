@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "fontawesome-iconpicker@3.2.0",
+      "destination": "wwwroot/plugins/fontawesome-iconpicker/"
+    },
+    {
+      "library": "datatables@1.10.21",
+      "destination": "wwwroot/lib/datatables/"
+    }
+  ]
+}
