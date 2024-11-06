@@ -1,8 +1,11 @@
-﻿using BLL.Interfaces;
+﻿using AutoMapper;
+using BLL.Interfaces;
 using BLL.Spacification;
 using DAL.Context;
 using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Shop_web.Helper;
+using Shop_web.ViewModels;
 
 namespace Shop_web.Controllers
 {
@@ -11,19 +14,20 @@ namespace Shop_web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IUniteOfWork _uniteOfWork;
-
-        public ProductController(ApplicationDbContext context, IUniteOfWork uniteOfWork)
+        private readonly IMapper _mapper;
+        public ProductController(ApplicationDbContext context, 
+                                    IUniteOfWork uniteOfWork,
+                                    IMapper mapper
+                                )
         {
             _context = context;
-
             _uniteOfWork = uniteOfWork;
+            _mapper = mapper;
         }
 
         #region Index Action (Get All Products)
         public async Task<IActionResult> Index()
           => View();
-
-        #endregion
 
         public async Task<IActionResult> GetAll()
         {
@@ -33,25 +37,26 @@ namespace Shop_web.Controllers
             {
                 Console.WriteLine("No products returned from database.");
             }
-            else
-            {
-                Console.WriteLine($"Fetched {Products.Count()} products from database.");
-            }
+           
             return Json(new { data = Products });
         }
+        #endregion
+
         #region Create Action
         [HttpGet]
         public async Task<IActionResult> Create()
-        => View();
+        =>  View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+        //IFormFile variable_name must be the same name of name that exist at the Create view (at img attribute)
+        public async Task<IActionResult> Create(ProductViewModel productVm)
         {
             if (ModelState.IsValid)
             {
-                //var Result = await _Product.AddCategoryAsync(Product);
-                await _uniteOfWork.Product.AddAsync(product);
+                productVm.ImgName=DocumentationSettings.Upload(productVm.Image, "Products");
+                var mappedProduct=_mapper.Map<ProductViewModel,Product>(productVm);
+                await _uniteOfWork.Product.AddAsync(mappedProduct);
                 var Result = await _uniteOfWork.CompleteAsync();
                 if (Result > 0)
                 {
@@ -59,50 +64,61 @@ namespace Shop_web.Controllers
                     return RedirectToAction("Index");
                 }
             }
-            return View(product);
+            return View(productVm);
         }
         #endregion
 
 
         #region Edit 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? IDCategory)
+        public async Task<IActionResult> Edit(int? id)
         {
-            if (IDCategory is not null)
+            if (id is not null)
             {
-                var spec = new BaseSpacificatons<Product>(X => X.Id == IDCategory);
+                TempData["ID"] = id;
+                var spec = new ProductWithCategorySpacification(id);
                 var product = await _uniteOfWork.Product.GetbyIdAsync(spec);
                 if (product != null)
                 {
-                    return View(product);
+                     
+                    var ProductVM = _mapper.Map<Product, ProductViewModel>(product);
+                    //ProductVM.Image = $"/Images/Products/{product.Img}";
+                  //  ViewData["Image"] = ProductVM.ImgName; 
+                    return View(ProductVM);
                 }
                 return View(nameof(Notfound));
             }
             return View(nameof(Index));
-
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product product)
+        public async Task<IActionResult> Edit(ProductViewModel productVM)
         {
 
             if (ModelState.IsValid)
             {
-                _uniteOfWork.Product.UpdateAsync(product);
-                var Result = await _uniteOfWork.CompleteAsync();
-                if (Result > 0)
+                try//use this cause if ther is problems in saving at database
                 {
-                    TempData["Update"] = "Product Has Updated Successfully";
-                    return RedirectToAction("Index");
+                    productVM.ImgName = DocumentationSettings.Upload(productVM.Image, "Products");
+                    var mappedProduct = _mapper.Map<ProductViewModel, Product>(productVM);
+                    _uniteOfWork.Product.UpdateAsync(mappedProduct);
+                    int result = await _uniteOfWork.CompleteAsync();
+                    if (result > 0)
+                        return RedirectToAction(nameof(Index));
+                    return BadRequest(StatusCodes.Status400BadRequest);
                 }
-                return View(nameof(Notfound));
-            }
+                catch (Exception ex)
+                {//1)Log the Execption : save and Send the error to develop Team
+                 //2)Form :Send error at form to user
+                    ModelState.AddModelError("", ex.Message);
+                }
+            }  
             return View(nameof(Notfound));
         }
         #endregion
 
-        [HttpGet]
+        [HttpDelete]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id is not null)
@@ -110,24 +126,18 @@ namespace Shop_web.Controllers
                 var spec = new BaseSpacificatons<Product>(X => X.Id == id);
                 var product = await _uniteOfWork.Product.GetbyIdAsync(spec);
                 if (product != null)
-                    return View(product);
-                return View(nameof(Notfound));
+                {
+                     _uniteOfWork.Product.Delete(product);
+                     DocumentationSettings.DeleteFile(product.Img, "Products");
+                     var Result = await _uniteOfWork.CompleteAsync();
+                        _uniteOfWork.Dispose();
+                       return Json(new { success = true, message = "Product Has been Deleted" });
+                    
+                }
+                    return Json(new {success=false,message="Error While Deleting"});
             }
             else
                 return View(nameof(Notfound));
-        }
-        [HttpPost]
-        public async Task<IActionResult> Delete(Product product)
-        {
-            _uniteOfWork.Product.Delete(product);
-            var Result = await _uniteOfWork.CompleteAsync();
-            if (Result > 0)
-            {
-                _uniteOfWork.Dispose();
-                TempData["Delete"] = "Product Has Deleted Successfully";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(nameof(Notfound));
         }
 
 

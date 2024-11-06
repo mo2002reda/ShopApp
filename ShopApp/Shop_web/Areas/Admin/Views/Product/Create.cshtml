@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.PageTitle = "Product Management";
+    ViewBag.TitleCard = "Add New Product";
+    Layout = "~/Views/Shared/_DashBoard.cshtml";
+}
+ <form method="post" asp-action="Create" asp-controller="Product" class="col-md-5" enctype="multipart/form-data">
+    <partial name="CreateAndEditPartialView" />
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary" asp-action="Create" asp-controller="Product">Add</button> ||
+        <button type="button" class="btn btn-warning" asp-action="Index" asp-controller="Product">Cancel</button>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

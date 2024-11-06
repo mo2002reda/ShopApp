@@ -17,7 +17,7 @@ namespace BLL.Spacification
         }
 
         //To Get Product by Id With Include Category
-        public ProductWithCategorySpacification(int id) : base(x => x.Id == id)
+        public ProductWithCategorySpacification(int? id) : base(x => x.Id == id)
         {
             Includes.Add(x => x.category);
         }
