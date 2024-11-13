@@ -1,0 +1,30 @@
+﻿@model IEnumerable<RoleViewModel>
+@{
+    ViewBag.PageTitle = "Roles Management";
+    ViewBag.TitleCard = "List Of Roles";
+    Layout = "~/Views/Shared/_CustomerLayOut.cshtml";
+}
+<div class="d-flex justify-content-center">
+    <table class="table table-hover text-center">
+        <thead class="custom-header">
+        <td>Name</td>
+        <td class="center">Actions</td>
+        <td><a asp-action="Create" asp-controller="Role" class="btn btn-outline-success">Add New Role </a></td>
+   </thead>
+   <tbody>
+    @foreach(var item in Model)
+    {
+        <tr>
+        <td>@item.RoleName</td>
+        <td>
+           <a asp-action="Edit" asp-controller="Role" asp-route-Edit="@item.Id" class="btn btn-outline-warning">Edit</a> ||
+           <a asp-action="Delete" asp-controller="Role" asp-route-id="@item.Id" class="btn btn-outline-danger" >Remove</a>
+        </td>
+        <td></td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>
+
+

@@ -1,0 +1,20 @@
+﻿@model RoleViewModel
+@{
+    ViewBag.PageTitle = "Roles Management";
+    ViewBag.TitleCard = "List Of Roles";
+    Layout = "~/Views/Shared/_CustomerLayOut.cshtml";
+}
+<h1>Add New Role</h1>
+<form asp-action="Create" asp-controller="Role">
+    <div class="form-group">
+        <label asp-for="RoleName" class="form-label">Name</label>
+        <input class="form-control" asp-for="RoleName">
+        <span asp-validation-for="RoleName" class="text-danger"></span>
+    </div>
+    <input type="submit" value="Add" class="btn btn-success" /> |
+    <a asp-action="Index" class="btn btn-info">Cancle</a>
+</form>
+
+
+
+
